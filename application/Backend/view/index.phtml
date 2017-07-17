@@ -1,0 +1,511 @@
+<?php
+/**
+ * ======================================================================
+ * LICENSE: This file is subject to the terms and conditions defined in *
+ * file 'license.txt', which is part of this source code package.       *
+ * ======================================================================
+ */
+if (!defined('ERRORFIX_KEY')) {
+    exit;
+}
+
+$settings = ErrorFix_Core_Option::getSettings();
+$errors   = count(CodePinch_Storage::getInstance()->getErrors());
+$history  = count(CodePinch_History::getInstance()->getErrors());
+$notes    = count(CodePinch_Note::getInstance()->getNotes());
+?>
+
+<div class="wrap">
+    <div class="row">
+        <div class="col-xs-12 col-md-8">
+            <div class="metabox-holder">
+                <div id="metabox-main" class="postbox">
+                    <div class="inside">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#list" aria-controls="list" role="tab" data-toggle="tab"><i class="icon-list"></i> <?php echo __('Errors', ERRORFIX_KEY); ?></a></li>
+                            <?php if ($errors) { ?>
+                                <li role="presentation"><a href="#piegraph" aria-controls="piegraph" role="tab" data-toggle="tab"><i class="icon-chart-pie"></i> <?php echo __('Graph', ERRORFIX_KEY); ?></a></li>
+                            <?php } ?>
+                            <?php if ($notes) { ?>
+                                <li role="presentation"><a href="#notes" aria-controls="notes" role="tab" data-toggle="tab" class="text-danger"><i class="icon-attention-circled"></i> <?php echo __('Notes', ERRORFIX_KEY); ?></a></li>
+                            <?php } ?>
+                            <?php if ($history) { ?>
+                                <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><i class="icon-ok-circled"></i> <?php echo __('Fixed Errors', ERRORFIX_KEY); ?></a></li>
+                            <?php } ?>
+                            <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab"><i class="icon-cog-alt"></i> <?php echo __('Settings', ERRORFIX_KEY); ?></a></li>
+                            <!-- <li role="presentation"><a href="#contact" aria-controls="contact" role="tab" data-toggle="tab"><i class="icon-mail-alt"></i> <?php echo __('Contact', ERRORFIX_KEY); ?></a></li> -->
+                            <li role="presentation"><a href="#about" aria-controls="about" role="tab" data-toggle="tab"><i class="icon-info"></i> <?php echo __('About', ERRORFIX_KEY); ?></a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane active" id="list">
+                                <table id="error-list" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:75%;"><?php echo __('Message', ERRORFIX_KEY); ?></th>
+                                            <th><?php echo __('Occurred (#)', ERRORFIX_KEY); ?></th>
+                                            <th>Module - Internal</th>
+                                            <th>Fix ID - Internal</th>
+                                            <th>Status - Internal</th>
+                                            <?php if (ErrorFix_Core_Option::getId() && !ErrorFix_Core_Option::getVip()) { ?><th>Fix</th><?php } ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <p class="alert alert-info text-bigger text-center"><i class="icon-info-circled"></i> <?php echo $this->preparePhrase('CodePinch can fix [ONLY] errors that are listed in the table above.', 'b'); ?></p>
+                            </div>
+                            <?php if ($errors) { ?>
+                                <div role="tabpanel" class="tab-pane" id="piegraph">
+                                    <div class="graph-container">
+                                        <i class="icon-spin4 animate-spin graph-loading" id="graph-pie-loader"></i>
+                                        <div id="graph-pie"></div>
+                                    </div>
+                                    <div class="graph-description">
+                                        <?php echo __('All the errors are grouped by plugin, theme or WordPress core.', ERRORFIX_KEY); ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <?php if ($notes) { ?>
+                                <div role="tabpanel" class="tab-pane" id="notes">
+                                    <table id="notes-list" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Note Code - Internal</th>
+                                                <th style="width:85%;"><?php echo __('Note', ERRORFIX_KEY); ?></th>
+                                                <th><?php echo __('Accept', ERRORFIX_KEY); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                    <div class="modal fade" tabindex="-1" role="dialog" id="accept-note-modal">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                                                    <h4 class="modal-title"><?php echo __('Accept Note', ERRORFIX_KEY); ?></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="alert alert-info text-center text-larger"><?php echo __('The note will be removed from this list after you click Accept button below.', ERRORFIX_KEY); ?></p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo __('Close', ERRORFIX_KEY); ?></button>
+                                                    <button type="button" class="btn btn-primary" id="accept-note"><?php echo __('Accept', ERRORFIX_KEY); ?></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <?php if ($history) { ?>
+                                <div role="tabpanel" class="tab-pane" id="history">
+                                    <table id="history-list" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:75%;"><?php echo __('Message', ERRORFIX_KEY); ?></th>
+                                                <th><?php echo __('Fixed', ERRORFIX_KEY); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            <?php } ?>
+                            <div role="tabpanel" class="tab-pane" id="settings">
+                                <div class="settings-container">
+                                    <div class="row setting">
+                                        <div class="col-md-8">
+                                            <span class="settings-title"><?php echo __('Notify about errors', ERRORFIX_KEY); ?></span>
+                                            <p class="text-muted"><?php echo __('Send an email to me when a new errors occur.', ERRORFIX_KEY); ?></p>
+                                        </div>
+                                        <div class="col-md-4 text-right">
+                                            <input data-toggle="toggle" data-on="<?php echo __('Enabled', ERRORFIX_KEY); ?>" data-off="<?php echo __('Disabled', ERRORFIX_KEY); ?>" type="checkbox" name="error-notification" <?php echo (empty($settings['error-notification']) ? '' : 'checked'); ?> />
+                                        </div>
+                                    </div>
+                                    <div class="row setting">
+                                        <div class="col-md-8">
+                                            <span class="settings-title"><?php echo __('Notify about available fixes', ERRORFIX_KEY); ?></span>
+                                            <p class="text-muted"><?php echo __('Send an email to me when there is a fix available.', ERRORFIX_KEY); ?></p>
+                                        </div>
+                                        <div class="col-md-4 text-right">
+                                            <input data-toggle="toggle" data-on="<?php echo __('Enabled', ERRORFIX_KEY); ?>" data-off="<?php echo __('Disabled', ERRORFIX_KEY); ?>" type="checkbox" name="fix-notification" <?php echo (empty($settings['fix-notification']) ? '' : 'checked'); ?> />
+                                        </div>
+                                    </div>
+                                    <div class="row setting">
+                                        <div class="col-md-12">
+                                            <span class="settings-title"><?php echo __('Notification email address', ERRORFIX_KEY); ?></span>
+                                            <p class="text-muted"><?php echo __('Specify email address that should be used to notify about errors or available fixes.', ERRORFIX_KEY); ?></p>
+                                            <input type="text" class="form-control" name="email" value="<?php echo (empty($settings['email']) ? '' : $settings['email']); ?>" placeholder="<?php echo __('Email address', ERRORFIX_KEY); ?>" />
+                                        </div>
+                                    </div>
+                                    <div class="row setting">
+                                        <div class="col-md-12">
+                                            <span class="settings-title"><?php echo __('Exclude Directories', ERRORFIX_KEY); ?></span>
+                                            <p class="text-muted"><?php echo __('Do not capture errors in specified list of directories (insert each relative path to directory in new line without leading slash). For example wp-content/plugins/abc.', ERRORFIX_KEY); ?></p>
+                                            <textarea class="form-control" name="exclude" placeholder="<?php echo __('List of excluded directories', ERRORFIX_KEY); ?>"><?php echo (empty($settings['exclude']) ? '' : $settings['exclude']); ?></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="contact">
+                                <div class="contact-container">
+                                    <p class="information text-muted text-bigger"><?php echo __('Contact us if you have any questions. Keep in mind that CodePinch can fix only PHP errors that are listed on the ERRORS tab.', ERRORFIX_KEY); ?></p>
+                                    <div class="form-group outer-top-sm">
+                                        <label for="contact-fullname"><?php echo __('Name', ERRORFIX_KEY); ?> <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="contact-fullname" placeholder="<?php echo __('Enter your name', ERRORFIX_KEY); ?>" value="<?php echo (empty($settings['contactFullname']) ? '' : $settings['contactFullname']); ?>" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contact-email"><?php echo __('Email Address', ERRORFIX_KEY); ?> <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="contact-email" placeholder="<?php echo __('Enter your email', ERRORFIX_KEY); ?>" value="<?php echo (empty($settings['contactEmail']) ? '' : $settings['contactEmail']); ?>" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contact-message"><?php echo __('Message', ERRORFIX_KEY); ?> <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="contact-message" placeholder="<?php echo __('How can we help you?', ERRORFIX_KEY); ?>" rows="5"></textarea>
+                                        <span class="help-block"><?php echo __('We speak English, Russian, Ukrainian and Polish. Message on any other language may delay our response.', ERRORFIX_KEY); ?></span>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo __('Close', ERRORFIX_KEY); ?></button>
+                                        <button type="button" class="btn btn-primary btn-success" id="send-message"><?php echo __('Send Message', ERRORFIX_KEY); ?></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="about">
+                                <div class="about-container">
+                                    <div class="about-header">
+                                        <p><a href="https://codepinch.io" target="_blank"><img src="https://codepinch.io/frontend/img/logo-intro.svg" /></a></a>
+                                        <p><?php echo __('Our patent-pending technology keeps your WordPress website error-free. The easy to use plugin provides solutions to PHP errors within hours, preventing costly maintenance time.', ERRORFIX_KEY); ?></p>
+                                    </div>
+
+                                    <h4><?php echo __('How does it work?', ERRORFIX_KEY); ?></h4>
+                                    <p><?php echo __('CodePinch constantly monitors your website for new PHP errors. When error occurs, we receive an error report and if possible, resolve it within 24 business hours. When the fix is available for download, your website is notified about it.', ERRORFIX_KEY); ?></p>
+
+                                    <h4><?php echo __('How to capture all errors?', ERRORFIX_KEY); ?></h4>
+                                    <p><?php echo $this->preparePhrase('CodePinch, like any other plugin, loads in order it appears in plugins folder. That is why any errors that are caused prior to CodePinch load cannot be catched. You can manually add the below PHP code to [wp-config.php] file (if not already added automatically during plugin activation) above [/* That\'s all, stop editing! Happy blogging. */] to capture all errors on your website.', 'b', 'b'); ?></p>
+                                    <pre style="background:#f9f9f9; color:#080808; font-size:0.8em;"><span style="color:#5a525f;font-style:italic">/* CodePinch: begin */</span>
+<span style="color:#794938">if</span> (<span style="color:#693a17">file_exists</span>(<span style="color:#0b6125">'<?php echo CODEPINCH_BOOTSTRAP; ?>'</span>)) {
+    <span style="color:#794938">require_once</span> <span style="color:#0b6125">'<?php echo CODEPINCH_BOOTSTRAP; ?>'</span>;
+}
+<span style="color:#5a525f;font-style:italic">/* CodePinch: end */</span></pre>
+
+                                    <h4><?php echo __('What information is collected?', ERRORFIX_KEY); ?></h4>
+                                    <p><?php echo sprintf(__('We collect information that is directly related to triggered error as specified in PHP %sset_error_handler%s documentation. In some cases we remotely fetch a software code from your website that caused an error. CodePinch doesn’t require FTP or admin credentials.  All the work is done on our server, providing a secure source for bug fixes and ongoing website maintenance.', ERRORFIX_KEY), '<a href="http://php.net/manual/en/function.set-error-handler.php" target="_blank">', '</a>'); ?></p>
+
+                                    <h4><?php echo __('What is a fix?', ERRORFIX_KEY); ?></h4>
+                                    <p><?php echo __('When error is reported, we review it and if there is a way to resolve it programmatically, we provide a fix. When you apply the fix to your website, CodePinch automatically backups the original file and overwrite it with the fix. If necessary we can remotely restore original files upon request.', ERRORFIX_KEY); ?></p>
+
+                                    <h4><?php echo __('Does CodePinch resolve all errors?', ERRORFIX_KEY); ?></h4>
+                                    <p><?php echo __('CodePinch may resolve only PHP errors that are listed on the Error List tab and only errors that can be resolved programmatically.', ERRORFIX_KEY); ?></p>
+
+                                    <p class="outer-top-sm text-center">
+                                        <a href="http://codepinch.io" class="btn btn-primary" target="_blank"><?php echo __('Check CodePinch.io for more information'); ?></a>
+                                    </p>
+
+                                    <p class="text-center">
+                                        <small><?php echo sprintf(__('By activating the CodePinch service you accept %sEnd User License Agreement%s.', ERRORFIX_KEY), '<a href="https://codepinch.io/#user-agreement" target="_blank">', '</a>'); ?></small>
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xs-12 col-md-4">
+            <?php if (ErrorFix_Core_Console::hasIssues()) { ?>
+                <div class="metabox-holder">
+                    <div class="postbox" id="codepinch-notifications">
+                        <h3 class="hndle text-danger"><span><?php echo __('Notifications', ERRORFIX_KEY); ?></span></h3>
+                        <div class="inside">
+                            <div class="sidebar-content">
+                                <ul class="error-list">
+                                    <?php foreach (ErrorFix_Core_Console::getWarnings() as $message) { ?>
+                                        <li><?php echo $message; ?></li>
+                                    <?php } ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+            <?php if (ErrorFix_Core_Option::getId()) { ?>
+                <input type="hidden" id="instance-id" value="<?php echo ErrorFix_Core_Option::getId(); ?>" />
+
+                <div class="metabox-holder">
+                    <div class="postbox" id="codepinch-status">
+                        <?php if (!ErrorFix_Core_Option::getVip()) { ?> <h3 class="hndle"><span><?php echo __('Current Balance', ERRORFIX_KEY); ?></span></h3><?php } ?>
+                        <div class="inside">
+                            <div class="sidebar-content">
+                                <?php if (ErrorFix_Core_Option::getVip()) { ?>
+                                    <span class="vip"><i class="icon-award"></i> VIP</span>
+                                <?php } else { ?>
+                                    <?php $balance = sprintf('%01.2f', ErrorFix_Core_Option::getBalance()); ?>
+                                    <span class="balance" data-balance="<?php echo $balance; ?>">$ <?php echo $balance; ?> <small>USD</small></span>
+                                    <div class="minor-table">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <a href="#add-credit-modal" class="btn btn-success btn-block" data-toggle="modal">
+                                                    <i class="icon-dollar"></i> <?php echo __('Add More Credit', ERRORFIX_KEY); ?>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <p class="information text-muted text-smaller outer-top-sm"><?php echo __('CodePinch error monitoring and notifications are free. You pay only for fixes when they are available.', ERRORFIX_KEY); ?></p>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+
+            <div class="modal fade" tabindex="-1" role="dialog" id="register-success-modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><?php echo __('Activation Completed', ERRORFIX_KEY); ?></h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="alert alert-success" role="alert">
+                                        <strong>Activation Completed Successfully!</strong>
+                                        If you have a <b>Promo Code</b> or have already purchased credit from our website <a href="https://codepinch.io" target="_blank">codepinch.io</a> and received an <b>Activation Code</b>, please click <strong>Add Credit</strong> button below. 
+                                        Otherwise simply <b>Reload</b> the page.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" id="close-register-success" data-dismiss="modal"><?php echo __('Reload', ERRORFIX_KEY); ?></button>
+                            <a href="#add-credit-modal" class="btn btn-primary" data-toggle="modal" data-dismiss="modal"><?php echo __('Add Credit', ERRORFIX_KEY); ?></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="modal fade" tabindex="-1" role="dialog" id="add-credit-modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><?php echo __('Add More Credit', ERRORFIX_KEY); ?></h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <p>If you have a <b>Promo Code</b> or have already purchased credit from our website <a href="https://codepinch.io" target="_blank">codepinch.io</a> and received an <b>Activation Code</b>, please enter it below and enter <b>Submit</b> button.</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-8">
+                                    <div class="form-group no-margin">
+                                        <input type="text" placeholder="<?php echo __('Enter Code Here', ERRORFIX_KEY); ?>" id="credit-activation-license" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-xs-4">
+                                    <button id="activate-credit" class="btn btn-success btn-block"><?php echo __('Submit', ERRORFIX_KEY); ?></button>
+                                </div>
+                            </div>
+
+                            <p class="hr"><span>OR</span></p>
+
+                            <div class="row">
+                                <div class="col-xs-12 col-md-6">
+                                    <div class="form-group form-bordered">
+                                        <span class="form-group-header"><?php echo __('Unlimited Service', ERRORFIX_KEY); ?></span>
+                                        <ul>
+                                            <li>Unlimited fixes.</li>
+                                            <li>Apply fixes automatically.</li>
+                                            <li>Technical consultation service.</li>
+                                            <li>Free, ongoing error monitoring.</li>
+                                        </ul>
+                                        <select id="package" class="form-control purchase-option">
+                                            <option value="">Select Your Package</option>
+                                            <option value="5999">1 year - 2 months free</option>
+                                            <option value="11980">2 years - 4 months free</option>
+                                            <option value="17970">3 years - 6 months free</option>
+                                            <option value="23960">5 years - 1 year free</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-md-6">
+                                    <div class="form-group form-bordered">
+                                        <span class="form-group-header"><?php echo __('Pay Per Fix', ERRORFIX_KEY); ?></span>
+                                        <ul>
+                                            <li>No upfront fees.</li>
+                                            <li>No monthly or hidden fees.</li>
+                                            <li>Hand select which errors will be fixed.</li>
+                                            <li>Free, ongoing error monitoring.</li>
+                                        </ul>
+                                        <select id="amount" class="form-control purchase-option">
+                                            <option value="">Select Credit Amount</option>
+                                            <option value="1000">$10.00 USD</option>
+                                            <option value="2000" selected>$20.00 USD</option>
+                                            <option value="5000">$50.00 USD</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-asterix">
+                                <?php echo $this->preparePhrase('[Stripe] or [PayPal] are used to process all payments securely. Both systems accept credit and debit cards without any registration needs. The unused balance can be refunded within 30 days from time of purchase upon request.', 'strong', 'strong'); ?>
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo __('Not Now', ERRORFIX_KEY); ?></button>
+                            <button type="button" class="btn btn-primary" id="submit-payment" data-amount="1000"><?php echo __('Purchase', ERRORFIX_KEY); ?></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="modal fade" tabindex="-1" role="dialog" id="request-fix-modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><?php echo __('Request Submitted', ERRORFIX_KEY); ?></h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="alert alert-success" role="alert">
+                                        <p class="text-bigger"><strong>Requested Submitted!</strong> Your request to fix the error has been submitted. The available fix will be applied automatically but only if you have enough credits and your server allows to overwrite the file that causes the error.</p>
+                                        <p class="information text-muted outer-top-sm">With the <a href="https://codepinch.io/#pricing" target="_blank"><strong>Unlimited Service</strong></a> all the errors can be fixed faster and automatically without a need to request a fix manually.</p>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="hide-request-notification" <?php echo (empty($settings['hide-fix-notification']) ? '' : 'checked'); ?> /> Do not show me this message again
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-success" data-dismiss="modal"><?php echo __('OK', ERRORFIX_KEY); ?></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <?php if ($errors || !ErrorFix_Core_Option::getId()) { ?>
+                <div class="metabox-holder">
+                    <div class="postbox" id="codepinch-fixes">
+                        <?php if (ErrorFix_Core_Option::getId()) { ?>
+                            <h3 class="hndle">
+                                <span><?php echo __('Available Fixes', ERRORFIX_KEY); ?></span>
+                                <a href="#" class="text-success reaload-patch-list" id="manual-check"><i class="icon-arrows-cw"></i> <?php echo __('Reload', ERRORFIX_KEY); ?></a>
+                            </h3>
+                        <?php } ?>
+                        <div class="inside">
+                            <?php if (ErrorFix_Core_Option::getId()) { ?>
+                                <?php $solutions = count(CodePinch_Storage::getInstance()->getPatchList()); ?>
+
+                                <?php if ($solutions) { ?>
+                                    <table id="patch-list" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>ID - Internal</th>
+                                                <th>Selected - Internal</th>
+                                                <th width="40%"><?php echo __('Fix Errors', ERRORFIX_KEY); ?></th>
+                                                <th><?php echo __('Cost', ERRORFIX_KEY); ?></th>
+                                                <th><?php echo __('Select', ERRORFIX_KEY); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody/>
+                                        <tfoot id="patch-footer" style="display: none;">
+                                            <tr>
+                                                <th class="text-right" colspan="4"></th>
+                                                <th><small><a href="#" id="select-all-fixes"><?php echo __('Select All', ERRORFIX_KEY); ?></a></small></th>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-right" colspan="4"><?php echo __('Total', ERRORFIX_KEY); ?>:</th>
+                                                <td id="total-cost" data-total="0.00">$ 0.00 <small>USD</small></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <a href="#" class="btn btn-success btn-block btn-sm" id="apply-fixes" disabled style="display: none;">
+                                        <?php echo __('Apply Fixes', ERRORFIX_KEY); ?>
+                                    </a>
+
+                                    <div class="modal fade" tabindex="-1" role="dialog" id="apply-modal">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                                                    <h4 class="modal-title"><?php echo __('Apply Fixes', ERRORFIX_KEY); ?></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="apply-step step-one">
+                                                        <p class="message"><?php echo sprintf(__('You are about to apply %s with the total cost of %s. Click the Apply button below to continue.', ERRORFIX_KEY), '<strong id="fix-count"></strong>', '<strong id="fix-total-cost"></strong>'); ?></p>
+                                                        <p class="information text-muted"><?php echo __('We backup all your original files and restore them if necessary upon request.', ERRORFIX_KEY); ?></p>
+                                                    </div>
+                                                    <div class="apply-step step-two">
+                                                        <ul class="apply-progress"></ul>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo __('Close', ERRORFIX_KEY); ?></button>
+                                                    <button type="button" class="btn btn-primary btn-success" id="confirm-apply"><?php echo __('Apply', ERRORFIX_KEY); ?></button>
+                                                    <button type="button" class="btn btn-primary btn-success" data-dismiss="modal" id="complete" style="display: none;"><?php echo __('Complete', ERRORFIX_KEY); ?></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" tabindex="-1" role="dialog" id="low-balance-modal">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="<?php echo __('Close', ERRORFIX_KEY); ?>"><span aria-hidden="true">&times;</span></button>
+                                                    <h4 class="modal-title"><?php echo __('Low Balance Notification', ERRORFIX_KEY); ?></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="text-larger alert alert-warning text-center"><?php echo __('You do not have enough credit to apply all selected fixes. Please add more credit or purchase annual service.', ERRORFIX_KEY); ?></p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo __('Close', ERRORFIX_KEY); ?></button>
+                                                    <a href="#add-credit-modal" class="btn btn-primary" data-toggle="modal" data-dismiss="modal">
+                                                        <?php echo __('Add Credit', ERRORFIX_KEY); ?>
+                                                    </a>
+                                                    <a href="#high-priority-modal" class="btn btn-success" data-toggle="modal" data-dismiss="modal">
+                                                        <?php echo __('Annual Service', ERRORFIX_KEY); ?>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php } else { ?>
+                                    <p class="text-center text-muted text-bordered outer-top-sm"><?php echo __('List of available fixes is empty', ERRORFIX_KEY); ?></p>
+                                <?php } ?>
+
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <p class="information text-muted text-smaller outer-top-sm"><?php echo __('CodePinch service is not a real-time system and it might take up to 24 business hours to prepare fixes.', ERRORFIX_KEY); ?></p>
+                                    </div>
+                                </div>
+
+                            <?php } else { ?>
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <a href="#" class="btn btn-success btn-lg" id="register" style="margin: 20px auto;"><?php echo __('Activate CodePinch Service', ERRORFIX_KEY); ?></a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <p class="information"><?php echo sprintf(__('By activating the CodePinch service you accept %sEnd User License Agreement%.', ERRORFIX_KEY), '<a href="https://codepinch.io/#user-agreement" target="_blank">', '</a>'); ?></p>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+</div>

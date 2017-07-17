@@ -1,0 +1,16 @@
+<?php if (!defined('ERRORFIX_KEY')) { exit; } ?>
+
+<ul style="list-style: none; display: table; table-layout: fixed; width: 100%; text-align: center; margin: 30px auto;">
+    <li style="display: table-cell; vertical-align: middle;">
+        <h1 style="padding: 0; color: #f26c4f; font-size: 5em; font-weight: 700; line-height: 1em;"><?php echo $stats->errors; ?></h1>
+        <span style="display: block; margin-top: 10px; letter-spacing: 1px; color: #777777;">ERRORS</span>
+    </li>
+    <li style="display: table-cell; vertical-align: middle;">
+        <h1 style="padding: 0; color: #fbaf5d; font-size: 5em; font-weight: 700; line-height: 1em;"><?php echo $stats->reported; ?></h1>
+        <span style="display: block; margin-top: 10px; letter-spacing: 1px; color: #777777;">REPORTED</span>
+    </li>
+    <li style="display: table-cell; vertical-align: middle;">
+        <h1 style="padding: 0; color: #5cb85c; font-size: 5em; font-weight: 700; line-height: 1em;"><?php echo $stats->fixed; ?></h1>
+        <span style="display: block; margin-top: 10px; letter-spacing: 1px; color: #777777;">ERRORS FIXED</span>
+    </li>
+</ul>
